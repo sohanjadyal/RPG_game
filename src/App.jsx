@@ -4,6 +4,8 @@ import GameUI from "./components/GameUI";
 import EndingScreen from "./components/EndingScreen";
 import { enemies } from "./data/enemies";
 import { weapons } from "./data/weapons";
+import { useRef } from "react";
+
 
 /* ================= SAVE HELPERS ================= */
 const SAVE_KEY = "dragon-repeller-save";
@@ -25,6 +27,9 @@ export default function App() {
   const [ended, setEnded] = useState(saved?.ended ?? false);
   const [isAttacking, setIsAttacking] = useState(false);
   const [win, setWin] = useState(false);
+  const [isDodging, setIsDodging] = useState(false);
+  const dodgeTimeoutRef = useRef(null);
+  const [combatText, setCombatText] = useState("");
 
 
   const [xp, setXp] = useState(saved?.xp ?? 0);
@@ -136,7 +141,6 @@ export default function App() {
   function attack() {
   if (!enemy) return;
 
-  // 🔥 trigger animation
   setIsAttacking(true);
   setTimeout(() => setIsAttacking(false), 300);
 
@@ -148,37 +152,75 @@ export default function App() {
   const monsterDamage =
     Math.floor(Math.random() * enemy.level * 5);
 
+  setCombatText(`You attacked the ${enemy.name}!`);
+
   setEnemyHealth(h => h - playerDamage);
-  setHealth(h => h - monsterDamage);
 
   // weapon break chance
   if (Math.random() <= 0.1 && inventory.length > 1) {
     setInventory(inv => inv.slice(0, -1));
     setCurrentWeapon(w => w - 1);
+    setCombatText(prev => `${prev} Your weapon broke!`);
   }
 
+  // monster defeated
   if (enemyHealth - playerDamage <= 0) {
     setXp(x => x + enemy.level);
     setGold(g => g + Math.floor(enemy.level * 6.7));
-
-    if (Math.random() <= 0.1) {
-      setEnemy(null);
-      easterEgg();
-      return;
-    }
 
     if (enemy.name === "dragon") {
       setWin(true);
       setEnded(true);
     } else {
+      setCombatText(`You defeated the ${enemy.name}!`);
       goTown();
     }
+    return;
   }
 
-  if (health - monsterDamage <= 0) {
-    setWin(false);
-    setEnded(true);
+  // monster attacks back
+  setHealth(h => {
+    const next = h - monsterDamage;
+    if (next <= 0) {
+      setCombatText(`The ${enemy.name} defeated you...`);
+      setEnded(true);
+    } else {
+      setCombatText(
+        `You attacked the ${enemy.name}! It hits you for ${monsterDamage}.`
+      );
+    }
+    return next;
+  });
+}
+
+function dodge() {
+  if (!enemy) return;
+
+  setIsDodging(true);
+  setTimeout(() => setIsDodging(false), 300);
+
+  const dodged = Math.random() > 0.4;
+
+  if (dodged) {
+    setCombatText(`You dodged the ${enemy.name}'s attack!`);
+    return;
   }
+
+  const monsterDamage =
+    Math.floor(Math.random() * enemy.level * 5);
+
+  setHealth(h => {
+    const next = h - monsterDamage;
+    if (next <= 0) {
+      setCombatText(`The ${enemy.name} defeated you...`);
+      setEnded(true);
+    } else {
+      setCombatText(
+        `You tried to dodge, but the ${enemy.name} hit you for ${monsterDamage}!`
+      );
+    }
+    return next;
+  });
 }
 
 
@@ -194,6 +236,7 @@ export default function App() {
       inventory={inventory}
       weapon={weapons[currentWeapon]}
       isAttacking={isAttacking} 
+      combatText={combatText}
       randomNumbers={randomNumbers}
       actions={{
         setLocation,
@@ -202,6 +245,7 @@ export default function App() {
         buyWeapon,
         sellWeapon,
         startFight,
+        dodge,    
         attack,
         pickNumber
       }}

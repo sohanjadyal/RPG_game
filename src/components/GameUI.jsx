@@ -19,7 +19,9 @@ export default function GameUI({
   location,
   enemy,
   enemyHealth,
+  isDodging,
    isAttacking,
+   combatText,
   inventory,
   weapon,
   randomNumbers,
@@ -35,7 +37,9 @@ export default function GameUI({
         <div className="scene-characters">
           <img
   src={playerImg}
-  className={`player ${isAttacking ? "attack" : "idle"}`}
+  className={`player ${
+  isDodging ? "dodge" : isAttacking ? "attack" : "idle"
+}`}
 />
 
           {enemy && (
@@ -103,7 +107,7 @@ export default function GameUI({
         {location === "fight" && (
           <>
             <button onClick={actions.attack}>Attack</button>
-            <button disabled>Dodge</button>
+            <button onClick={actions.dodge}>Dodge</button>
             <button onClick={actions.goTown}>Run</button>
           </>
         )}
@@ -119,7 +123,7 @@ export default function GameUI({
 
       {/* 📝 TEXT BOX */}
       <div id="text">
-        <p>{locations[location].text}</p>
+        <p>{combatText || locations[location].text}</p>
 
         {location === "easter" && randomNumbers?.length > 0 && (
           <p>Random numbers: {randomNumbers.join(", ")}</p>

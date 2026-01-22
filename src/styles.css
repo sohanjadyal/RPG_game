@@ -252,3 +252,13 @@ button {
   transform: translateY(0);
   box-shadow: none;
 }
+
+.player.dodge {
+  animation: dodgeMove 0.3s ease-out;
+}
+
+@keyframes dodgeMove {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(-20px); }
+  100% { transform: translateX(0); }
+}
