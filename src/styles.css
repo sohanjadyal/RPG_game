@@ -14,7 +14,8 @@ body {
 
 /* GAME CARD */
 #game {
-  width: 520px;
+  width: clamp(320px, 90vw, 520px);
+  margin: auto;
   background: white;
   border-radius: 10px;
   padding: 10px;
